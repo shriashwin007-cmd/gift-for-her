@@ -1515,7 +1515,17 @@ window.addBook=async function(){
   }catch(e){toast('Error saving.');console.error(e);}
   btn.disabled=false;btn.textContent='📚 Add to My List';
 };
-window.markDone=async function(id){
+window.refreshBookAI=async function(id,title,author,btn){
+  btn.textContent='Loading...';btn.disabled=true;
+  const info=await getBookInfo(title,author);
+  if(info){
+    try{
+      await updateDoc(doc(db,`users/${currentUser.uid}/books`,id),{bookInfo:info});
+      const b=books.find(x=>x.id===id);
+      if(b){b.bookInfo=info;renderBooks();toast('✨ Book insights ready!');}
+    }catch(e){btn.textContent='Get Insights ✨';btn.disabled=false;}
+  }
+};
   try{await updateDoc(doc(db,`users/${currentUser.uid}/books`,id),{status:'completed'});const b=books.find(x=>x.id===id);if(b)b.status='completed';renderBooks();showSaved();setTimeout(showSurprise,300);}catch(e){toast('Error updating.');}
 };
 window.delBook=async function(id){
@@ -1540,7 +1550,7 @@ function renderBooks(){
         ${b.bookInfo.themes?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${b.bookInfo.similar?'7px':'0'}">${b.bookInfo.themes.map(t=>`<span style="background:rgba(184,92,110,.1);color:var(--rose);padding:2px 9px;border-radius:100px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">${t}</span>`).join('')}</div>`:''}
         ${b.bookInfo.similar?`<div style="font-family:var(--fd);font-style:italic;font-size:.78rem;color:var(--muted);">📚 You might also love: <strong style="color:var(--ink2)">${b.bookInfo.similar.join(', ')}</strong></div>`:''}
       </div>
-    `:'<div style="font-size:.7rem;color:var(--muted);font-family:var(--fd);font-style:italic;margin-bottom:8px;">✨ AI insights loading...</div>';
+    `:`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:.72rem;color:var(--muted);font-family:var(--fd);font-style:italic;">✨ No AI insights yet</span><button onclick="refreshBookAI('${b.id}','${b.title.replace(/'/g,"\\'")}','${(b.author||'Unknown').replace(/'/g,"\\'")}',this)" style="font-size:.65rem;padding:3px 10px;border-radius:100px;border:1px solid var(--border);background:none;color:var(--rose);cursor:pointer;font-family:var(--fs);font-weight:700;">Get Insights ✨</button></div>`;
     el.innerHTML=`<div class="bk-spine" style="background:${COLS[i%COLS.length]}"></div><div class="bk-body"><span class="bk-st s-${b.status}">${lbl[b.status]}</span><div class="bk-title">${b.title}</div><div class="bk-author">by ${b.author}${b.year?' · '+b.year:''}${b.genre?' · '+b.genre:''}</div>${b.rating?`<div class="bk-stars">${starsHtml(b.rating)}</div>`:''}${infoHtml}${b.notes?`<div class="bk-notes">${b.notes}</div>`:''}<div class="bk-foot"><span>${b.date||''}</span><div style="display:flex;gap:6px;align-items:center;">${b.status!=='completed'?`<button class="done-btn" onclick="markDone('${b.id}')">✅ Done</button>`:''}<button class="dbtn" onclick="delBook('${b.id}')">✕</button></div></div></div>`;
     g.appendChild(el);
   });
