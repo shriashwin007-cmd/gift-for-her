@@ -1526,6 +1526,7 @@ window.refreshBookAI=async function(id,title,author,btn){
     }catch(e){btn.textContent='Get Insights ✨';btn.disabled=false;}
   }
 };
+window.markDone=async function(id){
   try{await updateDoc(doc(db,`users/${currentUser.uid}/books`,id),{status:'completed'});const b=books.find(x=>x.id===id);if(b)b.status='completed';renderBooks();showSaved();setTimeout(showSurprise,300);}catch(e){toast('Error updating.');}
 };
 window.delBook=async function(id){
