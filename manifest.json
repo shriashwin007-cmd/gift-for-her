@@ -1,0 +1,24 @@
+{
+  "name": "Resma's Literary World 🌸",
+  "short_name": "For Resma",
+  "description": "A personal literary companion — books, research & quotes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f3ea",
+  "theme_color": "#b85c6e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
