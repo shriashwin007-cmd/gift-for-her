@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<script>
+// GitHub Pages 404 redirect handler for Firebase Auth
+// Redirects /__/auth/handler back to the app with query params
+var path = window.location.pathname;
+var search = window.location.search;
+var hash = window.location.hash;
+
+if(path.indexOf('/__/auth/') !== -1){
+  // Store the full URL and redirect to index
+  sessionStorage.setItem('authRedirect', window.location.href);
+  window.location.replace('/gift-for-her/' + search + hash);
+} else {
+  // Normal 404 - redirect to app
+  window.location.replace('/gift-for-her/');
+}
+</script>
+</head>
+<body></body>
+</html>
