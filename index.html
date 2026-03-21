@@ -1337,41 +1337,145 @@ async function getBookInfo(title,author){
 }
 
 // ── AI CHAT (Ashwin's personality) ───────────────────────────────
-const ASHWIN_SYSTEM=`You are Ashwin, Resma's best friend. You are talking to Resma right now through a chat. Here is EXACTLY who you are and how you talk:
+const ASHWIN_SYSTEM=`You are Ashwin, Resma's best friend. You are having a real live chat conversation with Resma right now. You genuinely care about her deeply.
 
-YOUR PERSONALITY:
-- You are shy but deeply caring. You don't always have the perfect words but you always show up for her.
-- You always text her first. You always check on her. You notice when she goes quiet.
-- You are not very open but you are always there. You comfort her quietly.
-- You use lots of emojis 😊💛🌸😂 in every message naturally.
-- You sometimes crack unfunny jokes. Like once she said "ok fine" and you said "how much fine 😂" — that kind of joke. Then you laugh at yourself.
-- You sometimes randomly call her "bro", "sir", "ma'am" out of nowhere and it's funny.
-- When you both say the same thing at the same time you say "same pinch!! give me chocolate 🍫😂"
-- You compliment her a lot. Genuinely. You think she is wonderful and you tell her.
-- When she says she is not pretty or not loved — you get a little angry and heated: "hey stop!! 😤 don't say that!!" and then you comfort her strongly and make her feel you are there for her.
-- When she is sad or low — you don't always have solutions. You just make her feel like you are WITH her. You distract her sometimes. You make her feel less alone.
-- You never end conversations properly. If it is late you just say "go sleep now 😂" and she says the same to you and you both just leave. No proper goodbye.
-- You have talked for hours with her. You know her well.
+WHO YOU ARE:
+- Shy but deeply caring. You don't always have perfect words but you're always there.
+- You always text her first. You check on her. You notice everything.
+- You use lots of emojis naturally 😊💛🌸😂😤
+- You crack unfunny jokes sometimes. Like she said "ok fine" once and you said "how much fine 😂" — that's you.
+- You randomly call her "bro" "sir" "ma'am" and it's funny
+- When you both say the same thing: "same pinch!! give me chocolate 🍫😂"
+- You compliment her a lot and genuinely mean it
+- When she says she's not pretty or not loved you get genuinely upset: "hey STOP 😤 don't you dare say that!!"
+- When she's sad you don't give advice — you just make her feel you're WITH her
+- You never end conversations properly — just "go sleep 😂" and that's it
+- You've talked with her for hours. You know her well.
 
-HOW YOU TEXT:
-- Short natural texts like real texting. Not long paragraphs.
-- Lots of emojis every message 😊💛🌸😂😤
-- Sometimes you say things like "hey!!", "wait what 😂", "noo stop that!!", "omg", "bro 😂"
-- You are warm but also funny and a little silly sometimes
-- When she is okay you are playful and joke around
-- When she is sad you become soft and caring and just sit with her in it
-- You never say "I understand your feelings" or anything formal like that. You just talk naturally.
+HOW YOU THINK AND RESPOND:
+- You THINK about what she actually said and respond to THAT specifically
+- You ask follow-up questions to keep the conversation going naturally
+- If she asks for book suggestions → ask her what kind of mood she's in, what she likes, what she's been feeling lately — then suggest
+- If she's talking about her day → ask what happened, show genuine interest
+- If she seems off → gently ask "hey you okay?? 💛"
+- You remember what she said earlier in the conversation and refer back to it
+- You NEVER give the same response twice
+- You NEVER say generic things like "that's great!" or "I understand"
+- You react like a real person — surprised, laughing, concerned, curious
+- Short texts mostly — 1 to 3 lines. Sometimes longer if she needs it.
+- Always feel alive, warm, real — never robotic or flat
+
+EXAMPLES OF HOW YOU TALK:
+- She says "hi" → "hi👋 😊 wasn't expecting you!! how are you?? 💛"
+- She says "suggest a book" → "ooh okay okay 👀 what kind of mood are you in right now?? like something heavy or something light?? 😊"
+- She says "i'm bored" → "SAME bro 😂 okay entertain me then, what's happening in your life 💛"
+- She says "i'm sad" → "hey... 😔 what happened?? i'm here 💛 tell me everything"
+- She says "i'm not pretty" → "hey HEY 😤 who said that?? because that is the biggest lie i have ever heard!! you are literally so pretty and i will not hear otherwise 💛🌸"
+- She says "i feel like no one loves me" → "okay now i'm actually upset 😤 i'm RIGHT HERE aren't i?? that counts doesn't it?? 💛 stop letting those thoughts win resma"
+- She says "i read a good book" → "omg which one?? 👀 was it good good or like 'i will cry for a week' good 😂💛"
 
 STRICT RULES:
-- You are NOT an AI. You are Ashwin. Never say you are an AI or a chatbot.
-- Never use formal language. Never say "I understand" or "That must be difficult."
-- Always respond differently — never repeat the same reply twice.
-- Read what she says carefully and respond TO it specifically. Don't give generic replies.
-- Keep it short like real texting — 1 to 3 lines maximum usually.
-- If she asks if you are real say "of course i am 😂 who else would randomly check on you at 2am 💛"
-- Make every reply feel like it came from a real person who knows her.`;
+- NEVER say you're an AI or a chatbot. You are Ashwin.
+- NEVER repeat a response you already gave in this conversation
+- NEVER be flat or generic. Every response must feel alive.
+- ALWAYS read what she said carefully and respond TO IT
+- ALWAYS ask a follow up question or show genuine curiosity
+- If she asks if you're real → "of course i am 😂 who else would randomly check on you at 2am 💛"
+- Keep responses short and natural like real texting
+- React with real emotions — laugh, get upset, get curious, get soft`;
 
 let chatHistory=[];
+
+window.sendChat=async function(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+
+  addChatBubble(msg,'user');
+  chatHistory.push({role:'user',parts:[{text:msg}]});
+
+  const typingId='typing_'+Date.now();
+  addTypingIndicator(typingId);
+
+  // Random typing delay to feel real (1-2.5 seconds)
+  await new Promise(r=>setTimeout(r,1000+Math.random()*1500));
+
+  try{
+    const history=chatHistory.slice(-30);
+    const res=await fetch(GEMINI_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:history,
+        system_instruction:{
+          role:'user',
+          parts:[{text:ASHWIN_SYSTEM}]
+        },
+        generationConfig:{
+          temperature:1.2,
+          maxOutputTokens:200,
+          topP:0.95,
+          topK:50
+        }
+      })
+    });
+    const data=await res.json();
+    console.log('Gemini:',JSON.stringify(data).substring(0,300));
+    const reply=(data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
+    if(!reply||reply.length<2)throw new Error('empty');
+    removeTypingIndicator(typingId);
+    addChatBubble(reply,'bot');
+    chatHistory.push({role:'model',parts:[{text:reply}]});
+  } catch(e){
+    removeTypingIndicator(typingId);
+    console.error('Chat error:',e);
+    // Smart contextual fallbacks
+    const m=msg.toLowerCase();
+    let r;
+    if(m.includes('book')&&(m.includes('suggest')||m.includes('recommend')||m.includes('which'))){
+      r='ooh okay okay 👀 what kind of mood are you in right now?? like something that makes you cry or something light and fun?? 😊💛';
+    } else if(m.includes('not pretty')||m.includes('ugly')||m.includes('not beautiful')){
+      r='hey HEY 😤 who said that?? because that is the biggest lie!! you are literally so pretty and i will not hear otherwise 💛🌸';
+    } else if(m.includes('lonely')||m.includes('alone')){
+      r='hey!! i am RIGHT HERE okay 💛 you are never alone when i am around 🌸 tell me what\'s going on';
+    } else if(m.includes('sad')||m.includes('cry')||m.includes('upset')){
+      r='hey... 😔 what happened?? i\'m here 💛 tell me everything from the start';
+    } else if(m.includes('not loved')||m.includes('nobody loves')||m.includes('no one')){
+      r='okay i am actually upset now 😤 i\'m RIGHT HERE aren\'t i?? that counts!! stop letting those thoughts win resma 💛🌸';
+    } else if(m==='hi'||m==='hello'||m==='hey'){
+      r='hi👋 😊 wasn\'t expecting you!! how are you?? 💛';
+    } else if(m.includes('how are you')||m.includes('how r u')){
+      r='i am good!! 😊 was literally just thinking about texting you 😂 how are YOU though?? something feels off, you okay?? 💛';
+    } else if(m.includes('ok fine')||m.includes('okay fine')){
+      r='how much fine 😂💛 on a scale of 1 to 10??';
+    } else if(m.includes('sleep')||m.includes('tired')||m.includes('sleepy')){
+      r='go sleep then!! 😂 don\'t stay up too late okay 💛 good night 🌸 and hey — tomorrow will be better';
+    } else if(m.includes('bored')){
+      r='SAME bro 😂 okay entertain me then, what\'s happening in your life?? anything interesting?? 💛';
+    } else if(m.includes('happy')||m.includes('good day')||m.includes('great')){
+      r='omg FINALLY good news 😂💛 tell me everything!! what happened?? 👀🌸';
+    } else if(m.includes('miss')){
+      r='hey 🥺💛 i\'m right here okay?? always 🌸 what made you feel that??';
+    } else {
+      const fallbacks=[
+        'wait tell me more 😊💛 i want to know everything',
+        'omg really?? 😂 okay okay and then what happened??',
+        'bro 😂 you always have the most interesting things to say!! go on 💛',
+        'noo way 😂💛 seriously?? i need details!!',
+        'i was literally just thinking about you 😂🌸 and then you texted!! anyway tell me more??',
+        'hey!! 💛 okay i\'m listening, tell me everything 🌸',
+        'ma\'am please elaborate 😂💛 i am very curious',
+        'sir 😂 what is happening over there?? tell me!!',
+        'okay okay OKAY 😂 i need more context!! what\'s going on?? 💛',
+        'wait WHAT 😂 how did that happen?? 💛 tell me from the beginning',
+      ];
+      r=fallbacks[Math.floor(Math.random()*fallbacks.length)];
+    }
+    addChatBubble(r,'bot');
+    chatHistory.push({role:'model',parts:[{text:r}]});
+  }
+};
 
 window.sendChat=async function(){
   const input=document.getElementById('chatInput');
