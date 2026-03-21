@@ -1386,21 +1386,16 @@ window.sendChat=async function(){
   addTypingIndicator(typingId);
 
   try{
-    // Keep last 20 messages for context
     const history=chatHistory.slice(-20);
-
-    // Build full conversation with system as first exchange
-    const contents=[
-      {role:'user',parts:[{text:ASHWIN_SYSTEM+'\n\nResma just opened the chat. Say hi naturally like Ashwin would.'}]},
-      {role:'model',parts:[{text:'hi👋 😊 how are you doing?? 💛'}]},
-      ...history
-    ];
-
     const res=await fetch(GEMINI_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        contents,
+        contents:history,
+        system_instruction:{
+          role:'user',
+          parts:[{text:ASHWIN_SYSTEM}]
+        },
         generationConfig:{
           temperature:1.0,
           maxOutputTokens:150,
@@ -1410,38 +1405,46 @@ window.sendChat=async function(){
       })
     });
     const data=await res.json();
-    const reply=(data.candidates?.[0]?.content?.parts?.[0]?.text||'hey!! 💛 i am here, tell me 🌸').trim();
+    console.log('Chat response:',JSON.stringify(data).substring(0,200));
+    const reply=(data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
+    if(!reply)throw new Error('empty');
     removeTypingIndicator(typingId);
     addChatBubble(reply,'bot');
     chatHistory.push({role:'model',parts:[{text:reply}]});
   } catch(e){
     removeTypingIndicator(typingId);
-    console.error('Chat error:',e);
-    // Fallback — unique based on what she said
+    console.error('Chat fallback triggered:',e);
     const m=msg.toLowerCase();
     let r;
-    if(m.includes('not pretty')||m.includes('ugly')||m.includes('not beautiful')){
-      r='hey HEY 😤 stop that right now!! who told you that because they are wrong 💛 you are literally so pretty and i will fight anyone who says otherwise 😤🌸';
-    } else if(m.includes('lonely')||m.includes('alone')||m.includes('no one')){
-      r='hey!! i am right here okay 💛 you are never alone when i am around 🌸 tell me everything';
-    } else if(m.includes('sad')||m.includes('crying')||m.includes('cry')){
-      r='noo 😔 hey... i am here okay 💛 what happened?? talk to me 🌸';
-    } else if(m.includes('not loved')||m.includes('nobody loves')||m.includes('no one loves')){
-      r='okay now i am actually upset 😤 that is SO not true!! i am here aren\'t i 💛 stop thinking like that please 🌸';
-    } else if(m.includes('hi')||m.includes('hello')||m.includes('hey')){
+    if(m.includes('not pretty')||m.includes('ugly')){
+      r='hey HEY 😤 stop!! who told you that?? they are wrong 💛 you are so pretty and i will fight anyone who says otherwise 🌸';
+    } else if(m.includes('lonely')||m.includes('alone')){
+      r='hey!! i am right here okay 💛 never alone when i am around 🌸 talk to me';
+    } else if(m.includes('sad')||m.includes('cry')){
+      r='noo 😔 hey... i am here 💛 what happened?? tell me 🌸';
+    } else if(m.includes('not loved')||m.includes('nobody')){
+      r='okay i am actually upset now 😤 that is SO not true!! i am here aren\'t i 💛 stop that 🌸';
+    } else if(m==='hi'||m==='hello'||m==='hey'){
       r='hi👋 😊 how are you?? 💛';
+    } else if(m.includes('how are you')||m.includes('how r u')){
+      r='i am good!! 😊 was just thinking about you 😂 how are YOU?? 💛';
     } else if(m.includes('ok fine')||m.includes('okay fine')){
       r='how much fine 😂💛';
     } else if(m.includes('sleep')||m.includes('tired')){
-      r='go sleep then 😂 don\'t stay up too late okay 💛 good night 🌸';
+      r='go sleep then 😂 don\'t stay up too late 💛 good night 🌸';
+    } else if(m.includes('bored')){
+      r='SAME 😂 okay let\'s talk then what\'s on your mind 💛';
     } else {
       const fallbacks=[
         'wait tell me more 😊💛',
-        'omg really?? 😂 what happened next',
-        'hey i am listening 💛 go on 🌸',
-        'bro 😂 okay okay tell me everything',
+        'omg really?? 😂 what happened??',
+        'bro 😂 okay okay go on',
         'noo way 😂💛 seriously??',
-        'i was literally just thinking about you 😂🌸 anyway what\'s up??',
+        'i was literally just about to text you 😂🌸 what\'s up??',
+        'hey!! 💛 i am listening 🌸',
+        'ma\'am please elaborate 😂💛',
+        'sir 😂 what is happening??',
+        'okay okay OKAY 😂 tell me everything from the start 💛',
       ];
       r=fallbacks[Math.floor(Math.random()*fallbacks.length)];
     }
