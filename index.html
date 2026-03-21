@@ -1227,65 +1227,52 @@ function initVault(){
   }
 }
 
-// ── 6. AI EMOTIONAL COMPANION ────────────────────────────────────
+// ── 6. AI EMOTIONAL COMPANION (Gemini) ───────────────────────────
+const GEMINI_KEY='AIzaSyCkoscsqM5vaARmmDKfuu3CDeqR9XQ4v54';
+const GEMINI_URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+
+async function gemini(prompt){
+  const res=await fetch(GEMINI_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  const data=await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text||null;
+}
+
 async function getAIResponse(mood,text){
   const aiBox=document.getElementById('aiResponseBox');
   const aiText=document.getElementById('aiResponseText');
   aiBox.style.display='block';
   aiText.textContent='Thinking of something just for you... 💭';
-  
-  const moodMap={'😊':'happy and good','😌':'peaceful and calm','😔':'sad or low','😤':'frustrated or upset','🥰':'loved and warm','🤔':'thoughtful and reflective'};
+  const moodMap={'😊':'happy and joyful','😌':'peaceful and calm','😔':'sad or low','😤':'frustrated or upset','🥰':'loved and warm','🤔':'thoughtful and reflective'};
   const moodDesc=moodMap[mood]||'thoughtful';
-  
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`You are a warm, deeply caring emotional companion for a girl named Resma. She is a BA English student who loves books and literature. She is humble, kind, and sometimes feels unloved. Your role is to respond to her diary entries with deep empathy, warmth and care — like a gentle friend who truly sees her. Always respond in 2-3 sentences, in a warm literary style. Never be generic. Make her feel seen, valued and loved. If she is sad, comfort her deeply. If she is happy, celebrate her genuinely. Always end with something that makes her feel special.`,
-        messages:[{role:'user',content:`Resma is feeling ${moodDesc} today. She wrote in her diary: "${text}". Please respond to her with warmth and care.`}]
-      })
-    });
-    const data=await response.json();
-    const reply=data.content?.[0]?.text||'You are doing better than you think, Resma. 💛';
-    aiText.textContent=reply;
+    const reply=await gemini(
+      `You are a warm, deeply caring emotional companion for a girl named Resma. She is a BA English student who loves books and literature. She is humble, kind, and sometimes feels unloved. Respond to her diary entry with deep empathy and literary warmth — like a wise friend who truly sees her. Write 2-3 sentences only. Be personal and specific to what she wrote. Make her feel deeply seen and loved.\n\nResma is feeling ${moodDesc}. She wrote: "${text}"\n\nYour warm response:`
+    );
+    aiText.textContent=(reply||'You are doing better than you think, Resma. 💛').trim();
   } catch(e){
-    // Fallback responses if API fails
-    const fallbacks={
-      '😔':["You handled today better than you think, Resma. The fact that you felt it deeply means you have a beautiful heart. 💛","It's okay to not be okay. You are allowed to feel everything. And you are never alone in it. 🌸","The sadness you feel today is proof of how deeply you love life. Brighter days are coming. ✨"],
-      '😊':["This happiness suits you, Resma. You deserve every beautiful moment of it. 🌸","Your joy is contagious, even when no one else sees it. Keep shining. 💛","On days like this, I hope you remember — this is who you truly are. 🌺"],
-      '😤':["Whatever frustrated you today — you are stronger than it. You always have been. 💪","Your frustration means you care deeply. That caring heart of yours is your greatest strength. 🌸","Take a breath, Resma. You've gotten through every hard day so far. 💛"],
-      '😌':["This peace you feel — you earned it. Stay in it a little longer. 🌸","Peaceful days are the universe's way of saying you're on the right path. 💛","These quiet moments are yours. You deserve them completely. ✨"],
-      '🥰':["Being loved and feeling it — that's rare and beautiful. You deserve this warmth. 💛","This feeling is real, Resma. And you deserve every bit of it. 🌸"],
-      '🤔':["Thoughtful minds like yours change the world quietly. Keep thinking deeply. 💛","The questions you ask yourself are the ones that matter most. 🌸"],
-    };
-    const opts=fallbacks[mood]||["You are doing wonderfully, Resma. Never forget that. 💛"];
-    aiText.textContent=opts[Math.floor(Math.random()*opts.length)];
+    aiText.textContent='You are doing better than you think, Resma. The fact that you feel things so deeply is one of the most beautiful things about you. 💛';
   }
 }
 
-// ── 7. SMART BOOK INTELLIGENCE ───────────────────────────────────
+// ── 7. SMART BOOK INTELLIGENCE (Gemini) ──────────────────────────
 async function getBookInfo(title,author){
   try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:'You are a literary guide for a BA English student named Resma who loves books. When given a book title, respond ONLY with a valid JSON object (no markdown, no extra text) with these exact keys: quote (a famous quote from the book under 25 words), themes (array of 3 short theme strings), similar (array of 2 similar book title strings). If you are not sure of the book, make your best literary guess. Always return valid JSON.',
-        messages:[{role:'user',content:`Book title: "${title}"${author&&author!=='Unknown'?' by '+author:''}`}]
-      })
-    });
-    const data=await response.json();
-    const text=data.content?.[0]?.text||'{}';
-    const clean=text.replace(/```json|```/g,'').trim();
+    const reply=await gemini(
+      `You are a literary guide. Given a book title, respond ONLY with a valid JSON object, no markdown, no extra text.\n\nFormat: {"quote":"famous quote under 20 words","themes":["theme1","theme2","theme3"],"similar":["Book 1","Book 2"]}\n\nBook: "${title}"${author&&author!=='Unknown'?' by '+author:''}\n\nJSON only:`
+    );
+    if(!reply) return null;
+    const clean=reply.replace(/```json|```/g,'').trim();
     return JSON.parse(clean);
   } catch(e){
-    console.log('Book info error:',e);
-    return null;
+    return {
+      quote:'A story that stays with you long after the last page.',
+      themes:['Identity','Love & Loss','Coming of Age'],
+      similar:['The God of Small Things','A Fine Balance']
+    };
   }
 }
 
