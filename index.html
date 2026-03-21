@@ -1229,7 +1229,7 @@ function initVault(){
 
 // ── 6. AI EMOTIONAL COMPANION (Gemini) ───────────────────────────
 const GEMINI_KEY='AIzaSyCkoscsqM5vaARmmDKfuu3CDeqR9XQ4v54';
-const GEMINI_URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`;
+const GEMINI_URL=`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GEMINI_KEY}`;
 
 async function gemini(prompt){
   const res=await fetch(GEMINI_URL,{
