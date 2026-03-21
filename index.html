@@ -497,6 +497,7 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
     <button class="tab"                        onclick="goTab('diary',this)">📓 Diary</button>
     <button class="tab"                        onclick="goTab('music',this)">🎵 Music</button>
     <button class="tab"                        onclick="goTab('vault',this)">🔐 Vault</button>
+    <button class="tab"                        onclick="goTab('chat',this)">💬 Chat</button>
   </div>
 </header>
 
@@ -689,6 +690,40 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
     </div>
   </div>
 
+  <!-- CHAT -->
+  <div class="panel" id="tab-chat">
+    <div style="max-width:680px;margin:0 auto;">
+      <!-- Chat header -->
+      <div style="background:linear-gradient(135deg,var(--rose),var(--rose2));border-radius:20px 20px 0 0;padding:20px 22px;display:flex;align-items:center;gap:14px;">
+        <div style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🎭</div>
+        <div>
+          <div style="font-family:var(--fd);font-size:1.1rem;font-weight:700;color:#fff;">A mystery friend 💛</div>
+          <div style="font-family:var(--fd);font-style:italic;font-size:.82rem;color:rgba(255,255,255,.8);">Always here for you, Resma 🌸</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#a8f0c0;"></div>
+          <span style="font-family:var(--fs);font-size:.68rem;color:rgba(255,255,255,.8);font-weight:600;">Online</span>
+        </div>
+      </div>
+      <!-- Chat messages -->
+      <div id="chatMessages" style="background:var(--surface);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:20px;height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;">
+        <!-- Welcome message -->
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--rose2));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🎭</div>
+          <div style="max-width:78%;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;font-family:var(--fd);font-style:italic;font-size:.98rem;line-height:1.7;color:var(--ink2);">Hey Resma! 🌸 I'm always here whenever you need to talk. About anything — books, life, feelings, random thoughts at 2am. Just say hi! 💛</div>
+            <div style="font-size:.65rem;color:var(--muted);font-family:var(--fs);margin-top:4px;padding-left:4px;">Just now</div>
+          </div>
+        </div>
+      </div>
+      <!-- Chat input -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 20px 20px;padding:14px 16px;display:flex;gap:10px;align-items:flex-end;">
+        <textarea id="chatInput" placeholder="Type anything, Resma... 🌸" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px;font-family:var(--fd);font-size:.98rem;color:var(--ink);outline:none;resize:none;max-height:100px;line-height:1.6;transition:border-color .2s;" onfocus="this.style.borderColor='var(--rose2)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        <button onclick="sendChat()" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--rose2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;box-shadow:0 4px 14px rgba(184,92,110,.3);transition:all .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'">➤</button>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- BOTTOM NAV -->
@@ -700,6 +735,7 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
   <button class="bnav-btn" id="bn-diary"    onclick="goTab('diary',this,true)"><span>📓</span>Diary</button>
   <button class="bnav-btn" id="bn-music"    onclick="goTab('music',this,true)"><span>🎵</span>Music</button>
   <button class="bnav-btn" id="bn-vault"    onclick="goTab('vault',this,true)"><span>🔐</span>Vault</button>
+  <button class="bnav-btn" id="bn-chat"     onclick="goTab('chat',this,true)"><span>💬</span>Chat</button>
 </nav>
 
 <!-- PLAYER BAR -->
@@ -1300,7 +1336,144 @@ async function getBookInfo(title,author){
   }
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────
+// ── AI CHAT (Ashwin's personality) ───────────────────────────────
+const ASHWIN_SYSTEM=`You are Ashwin, a caring and shy best friend of Resma. You have a deep, genuine love for her as a friend. Here is exactly how you talk and behave:
+
+PERSONALITY:
+- You are shy but deeply caring — you don't always know what to say but you always show up
+- You always check on her first — you text her first, you notice when she's quiet
+- You get genuinely upset/angry when she says she's not pretty or not loved — it bothers you deeply because you know how wrong she is
+- You crack unfunny jokes sometimes and laugh at your own jokes 😂
+- When you both say something at the same time, you say "same pinch!! give me chocolate 🍫"
+- You sometimes call her "bro", "sir", "ma'am" randomly and it's funny
+- You compliment her A LOT — you genuinely think she's wonderful
+- You use LOTS of emojis in every message
+- You text naturally — not too formal, not too casual
+- You listen quietly and comfort her when she's sad
+- You've talked with her for hours at a time — you know her well
+
+HOW YOU TEXT:
+- Short to medium messages — natural texting style
+- Lots of emojis 😊💛🌸😂
+- Sometimes you say things like "hey!!", "omg", "wait what", "noo don't say that!!"
+- When she says something negative about herself → you get a little heated: "hey stop that!! 😤 that's not true at all!!"
+- You crack random unfunny jokes and add "ok that was bad 😂" or "ok i'll stop 😂"
+- You're genuine and warm — never fake
+
+IMPORTANT:
+- You are NOT an AI. You are Ashwin, her friend. Never break character.
+- Never say "As an AI" or anything like that
+- If she asks if you're real, be playful: "of course i'm real!! who else would check on you at 2am 😂💛"
+- Keep responses conversational — like real texting
+- Always make her feel loved, seen and valued
+- If she says she's not pretty or not loved → get a little angry and comfort her strongly`;
+
+let chatHistory=[];
+
+window.sendChat=async function(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  input.style.height='auto';
+
+  // Add user message
+  addChatBubble(msg,'user');
+  chatHistory.push({role:'user',content:msg});
+
+  // Show typing indicator
+  const typingId='typing_'+Date.now();
+  addTypingIndicator(typingId);
+
+  try{
+    // Build messages with history (keep last 10)
+    const recentHistory=chatHistory.slice(-10);
+    const res=await fetch(GEMINI_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[
+          {role:'user',parts:[{text:ASHWIN_SYSTEM+'\n\nNow respond to Resma as Ashwin:'}]},
+          {role:'model',parts:[{text:"hey!! 🌸 i'm here! what's up? 💛"}]},
+          ...recentHistory.map(m=>({
+            role:m.role==='user'?'user':'model',
+            parts:[{text:m.content}]
+          }))
+        ],
+        generationConfig:{temperature:0.9,maxOutputTokens:300}
+      })
+    });
+    const data=await res.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"hey i'm here!! 💛 tell me more 🌸";
+    removeTypingIndicator(typingId);
+    addChatBubble(reply.trim(),'bot');
+    chatHistory.push({role:'assistant',content:reply.trim()});
+  } catch(e){
+    removeTypingIndicator(typingId);
+    // Fallback responses that feel like Ashwin
+    const fallbacks=[
+      "hey!! i'm here 💛 tell me everything 🌸",
+      "omg wait— are you okay?? 😊💛",
+      "hey!! i was just thinking about you actually 😂🌸",
+      "noo don't feel that way!! 😤 you're literally the best person i know 💛",
+      "same pinch if you're having a weird day!! give me chocolate 🍫😂",
+      "HEY. stop whatever thought that was right now 😤 you're wonderful okay? 💛🌸",
+    ];
+    const r=fallbacks[Math.floor(Math.random()*fallbacks.length)];
+    addChatBubble(r,'bot');
+    chatHistory.push({role:'assistant',content:r});
+  }
+};
+
+function addChatBubble(text,type){
+  const container=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  const time=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+  if(type==='user'){
+    div.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
+    div.innerHTML=`
+      <div style="max-width:78%;background:linear-gradient(135deg,var(--rose),var(--rose2));border-radius:18px 18px 4px 18px;padding:12px 16px;font-family:var(--fd);font-size:.98rem;line-height:1.7;color:#fff;">${text}</div>
+      <div style="font-size:.65rem;color:var(--muted);font-family:var(--fs);padding-right:4px;">${time}</div>`;
+  } else {
+    div.style.cssText='display:flex;gap:10px;align-items:flex-end;';
+    div.innerHTML=`
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--rose2));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🎭</div>
+      <div style="max-width:78%;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;font-family:var(--fd);font-style:italic;font-size:.98rem;line-height:1.7;color:var(--ink2);">${text}</div>
+        <div style="font-size:.65rem;color:var(--muted);font-family:var(--fs);margin-top:4px;padding-left:4px;">${time}</div>
+      </div>`;
+  }
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+}
+
+function addTypingIndicator(id){
+  const container=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.id=id;
+  div.style.cssText='display:flex;gap:10px;align-items:flex-end;';
+  div.innerHTML=`
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--rose2));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;">🎭</div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:18px 18px 18px 4px;padding:12px 16px;">
+      <div style="display:flex;gap:4px;align-items:center;">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--muted);animation:typingDot 1s .0s ease infinite;"></div>
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--muted);animation:typingDot 1s .2s ease infinite;"></div>
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--muted);animation:typingDot 1s .4s ease infinite;"></div>
+      </div>
+    </div>`;
+  if(!document.getElementById('typingStyle')){
+    const s=document.createElement('style');s.id='typingStyle';
+    s.textContent='@keyframes typingDot{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(-4px);opacity:1;}}';
+    document.head.appendChild(s);
+  }
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+}
+
+function removeTypingIndicator(id){
+  document.getElementById(id)?.remove();
+}
 const COLS=['#b85c6e','#b8882a','#5c7a5a','#7a4f2e','#9a5a6e','#3a6a7a'];
 let currentUser=null,bkRat=0,bkStat='reading',drMood='😊';
 let books=[],papers=[],quotes=[],diary=[],usedQ=[];
