@@ -4,12 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>For Resma 🌸 — 28th March</title>
-<link rel="manifest" href="manifest.json"/>
+<link rel="manifest" href="/gift-for-her/manifest.json"/>
 <meta name="theme-color" content="#b85c6e"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="For Resma 🌸"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="/gift-for-her/icon-192.png"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -1243,7 +1243,7 @@ function renderDiary(){
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('/gift-for-her/sw.js',{scope:'/gift-for-her/'}).catch(()=>{});
   });
 }
 </script>
