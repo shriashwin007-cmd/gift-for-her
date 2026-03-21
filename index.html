@@ -1275,15 +1275,18 @@ async function getBookInfo(title,author){
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
-        system:'You are a literary guide for a BA English student named Resma who loves books. When given a book title, respond ONLY with a JSON object (no markdown) with these exact keys: quote (a famous quote from the book, under 25 words), themes (array of 3 theme strings), similar (array of 2 similar book title strings). Keep it concise.',
-        messages:[{role:'user',content:`Book: "${title}" by ${author||'unknown author'}`}]
+        system:'You are a literary guide for a BA English student named Resma who loves books. When given a book title, respond ONLY with a valid JSON object (no markdown, no extra text) with these exact keys: quote (a famous quote from the book under 25 words), themes (array of 3 short theme strings), similar (array of 2 similar book title strings). If you are not sure of the book, make your best literary guess. Always return valid JSON.',
+        messages:[{role:'user',content:`Book title: "${title}"${author&&author!=='Unknown'?' by '+author:''}`}]
       })
     });
     const data=await response.json();
     const text=data.content?.[0]?.text||'{}';
     const clean=text.replace(/```json|```/g,'').trim();
     return JSON.parse(clean);
-  } catch(e){return null;}
+  } catch(e){
+    console.log('Book info error:',e);
+    return null;
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
