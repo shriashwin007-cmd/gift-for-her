@@ -659,6 +659,7 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
     <div class="pb-artist" id="pbArtist">—</div>
   </div>
   <div class="pb-btns">
+    <button class="pb-btn" id="pbShuffleBtn" onclick="toggleShuffle()" title="Shuffle">⇄</button>
     <button class="pb-btn" onclick="prevSong()">⏮</button>
     <button class="pb-btn main" id="pbPlayBtn" onclick="togglePlay()">▶</button>
     <button class="pb-btn" onclick="nextSong()">⏭</button>
@@ -708,10 +709,37 @@ provider.setCustomParameters({prompt:'select_account'});
 // ── PLAYLIST ──────────────────────────────────────────────────────
 const SONGS=[
   {title:"Golden Brown",artist:"The Stranglers",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1773336639/The_Stranglers_by_Jesusavgn_-_Golden_Brown__mp3.pm_otil1l.mp3"},
+  {title:"Kadhal Aasai",artist:"Anjaan · Yuvan Shankar Raja",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103740/Anjaan_-_Kadhal_Aasai_Lyric_Suriya_Samantha_Yuvan_-_SonyMusicSouthVEVO_ktafcg.mp3"},
+  {title:"Brooklyn Baby",artist:"Lana Del Rey",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103739/Lana_Del_Rey_-_Brooklyn_Baby_Official_Audio_-_LanaDelReyVEVO_lioedf.mp3"},
+  {title:"Cinnamon Girl",artist:"Lana Del Rey",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103738/Cinnamon_Girl_-_Lana_Del_Rey_o3iijo.mp3"},
+  {title:"Chemtrails Over The Country Club",artist:"Lana Del Rey",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103739/Lana_Del_Rey_-_Chemtrails_Over_The_Country_Club_Official_Music_Video_-_LanaDelReyVEVO_g6qpjj.mp3"},
+  {title:"White Mustang",artist:"Lana Del Rey",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103737/white_mustang_cwj2sp.mp3"},
+  {title:"West Coast",artist:"Lana Del Rey",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103736/Lana_Del_Rey_-_West_Coast_-_LanaDelReyVEVO_d5ujkv.mp3"},
+  {title:"Kannae Kanmaniye",artist:"Tere Ishk Main · UBII2B",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103733/Kannae_Kanmaniye_Lyrics_-_Tere_Ishk_Main_kannae_kanmaniye_unnodu_saran_-_UBII2B_prmqfl.mp3"},
+  {title:"Kalyani",artist:"ARJN x KDS x FIFTY4 x RONN",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/ARJN_x_KDS_x_FIFTY4_x_RONN_-_KALYANI_Official_Lyrical_Video_-_MONEY_VERSE_RECORDS_pq5y9j.mp3"},
+  {title:"I Think They Call This Love",artist:"Matthew Ifield",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/I_Think_They_Call_This_Love_Cover_-_Matthew_Ifield_nh3xhb.mp3"},
+  {title:"The Night We Met",artist:"Lord Huron",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/Lord_Huron_-_The_Night_We_Met_Official_Audio_-_Lord_Huron_ozz7ai.mp3"},
 ];
-let curSong=0,isPlaying=false;
-const bgAudio=document.getElementById('bgMusic');
-bgAudio.volume=0.35;
+let curSong=0,isPlaying=false,isShuffled=false,shuffleOrder=[];
+
+function buildShuffleOrder(){
+  shuffleOrder=[...Array(SONGS.length).keys()];
+  for(let i=shuffleOrder.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [shuffleOrder[i],shuffleOrder[j]]=[shuffleOrder[j],shuffleOrder[i]];
+  }
+}
+
+function getNextSong(){
+  if(!isShuffled) return (curSong+1)%SONGS.length;
+  const idx=shuffleOrder.indexOf(curSong);
+  return shuffleOrder[(idx+1)%shuffleOrder.length];
+}
+function getPrevSong(){
+  if(!isShuffled) return (curSong-1+SONGS.length)%SONGS.length;
+  const idx=shuffleOrder.indexOf(curSong);
+  return shuffleOrder[(idx-1+shuffleOrder.length)%shuffleOrder.length];
+}
 
 function loadSong(i){
   curSong=i;
@@ -725,21 +753,40 @@ function togglePlay(){
   else{bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';}).catch(()=>{});}
 }
 window.togglePlay=togglePlay;
-window.prevSong=()=>{loadSong((curSong-1+SONGS.length)%SONGS.length);if(isPlaying)bgAudio.play();};
-window.nextSong=()=>{loadSong((curSong+1)%SONGS.length);if(isPlaying)bgAudio.play();};
-bgAudio.addEventListener('ended',()=>window.nextSong());
+window.prevSong=()=>{loadSong(getPrevSong());if(isPlaying)bgAudio.play();};
+window.nextSong=()=>{loadSong(getNextSong());if(isPlaying)bgAudio.play();};
+window.toggleShuffle=function(){
+  isShuffled=!isShuffled;
+  if(isShuffled)buildShuffleOrder();
+  const btn=document.getElementById('pbShuffleBtn');
+  if(btn){btn.style.background=isShuffled?'var(--rose)':'none';btn.style.color=isShuffled?'#fff':'var(--ink2)';}
+  renderPlaylist();
+};
+bgAudio.addEventListener('ended',()=>{loadSong(getNextSong());bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});});
+
 function renderPlaylist(){
   const pl=document.getElementById('playlist');
+  if(!pl)return;
   pl.innerHTML=SONGS.map((s,i)=>`
     <div class="pl-item${i===curSong?' playing':''}" onclick="playSong(${i})">
       <div class="pl-num">${i===curSong&&isPlaying?'🎵':(i+1)}</div>
       <div class="pl-info"><div class="pl-title">${s.title}</div><div class="pl-artist">${s.artist}</div></div>
-      <div class="pl-icon">${i===curSong&&isPlaying?'🔊':'🎵'}</div>
+      <div class="pl-icon">${i===curSong&&isPlaying?'🔊':'▷'}</div>
     </div>`).join('');
 }
-window.playSong=function(i){loadSong(i);bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';document.getElementById('playerBar').style.display='flex';renderPlaylist();}).catch(()=>{});};
+window.playSong=function(i){
+  loadSong(i);
+  bgAudio.play().then(()=>{
+    isPlaying=true;
+    document.getElementById('pbPlayBtn').textContent='⏸';
+    document.getElementById('playerBar').style.display='flex';
+    renderPlaylist();
+  }).catch(()=>{});
+};
 
 // Start music on first interaction
+const bgAudio=document.getElementById('bgMusic');
+bgAudio.volume=0.35;
 function startMusic(){
   if(isPlaying)return;
   loadSong(0);
