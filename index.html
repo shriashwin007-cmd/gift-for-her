@@ -1472,19 +1472,23 @@ window.addBook=async function(){
   try{
     const data={title,author,genre:document.getElementById('bkGenre').value.trim(),year:document.getElementById('bkYear').value.trim(),status:bkStat,notes:document.getElementById('bkNotes').value.trim(),rating:bkRat,date:new Date().toLocaleDateString('en-IN'),createdAt:serverTimestamp()};
     const ref=await addDoc(userCol('books'),data);
-    books.unshift({id:ref.id,...data});renderBooks();showSaved();
+    const newBook={id:ref.id,...data};
+    books.unshift(newBook);renderBooks();showSaved();
     ['bkTitle','bkAuthor','bkGenre','bkYear','bkNotes'].forEach(id=>document.getElementById(id).value='');
     bkRat=0;bkStat='reading';
     document.querySelectorAll('#bkStars .star').forEach(s=>s.classList.remove('on'));
     document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('on'));
     document.querySelector('.sbtn[data-s="reading"]').classList.add('on');
-    if(isComp)setTimeout(showSurprise,400);else toast('Book added! 📚 Fetching book insights...');
-    // Smart book intelligence
-    getBookInfo(title,author).then(info=>{
+    if(isComp)setTimeout(showSurprise,400);else toast('Book added! 📚 Getting AI insights...');
+    // Smart book intelligence — fetch and SAVE to Firestore
+    getBookInfo(title,author).then(async info=>{
       if(info){
-        const bk=books[0];bk.bookInfo=info;
-        renderBooks();
-        if(info.quote) toast(`"${info.quote.substring(0,60)}..." 📚`);
+        try{
+          await updateDoc(doc(db,`users/${currentUser.uid}/books`,ref.id),{bookInfo:info});
+          newBook.bookInfo=info;
+          renderBooks();
+          if(info.quote)toast(`✨ "${info.quote.substring(0,55)}..."`);
+        }catch(e){console.error('bookInfo save error',e);}
       }
     });
   }catch(e){toast('Error saving.');console.error(e);}
@@ -1510,10 +1514,12 @@ function renderBooks(){
   books.forEach((b,i)=>{
     const el=document.createElement('div');el.className='bk';el.style.animationDelay=(i*.05)+'s';
     const infoHtml=b.bookInfo?`
-      ${b.bookInfo.quote?`<div style="font-family:var(--fd);font-style:italic;font-size:.82rem;color:var(--rose);border-left:2px solid var(--rose2);padding-left:9px;margin-bottom:8px;line-height:1.6;">"${b.bookInfo.quote}"</div>`:''}
-      ${b.bookInfo.themes?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${b.bookInfo.themes.map(t=>`<span style="background:rgba(184,92,110,.09);color:var(--rose);padding:2px 9px;border-radius:100px;font-size:.62rem;font-weight:700;letter-spacing:.05em;">${t}</span>`).join('')}</div>`:''}
-      ${b.bookInfo.similar?`<div style="font-family:var(--fd);font-style:italic;font-size:.78rem;color:var(--muted);margin-bottom:8px;">You might love: ${b.bookInfo.similar.join(', ')}</div>`:''}
-    `:'';
+      <div style="background:linear-gradient(135deg,rgba(184,92,110,.06),rgba(184,136,42,.04));border:1px solid rgba(184,92,110,.12);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+        ${b.bookInfo.quote?`<div style="font-family:var(--fd);font-style:italic;font-size:.85rem;color:var(--rose);line-height:1.65;margin-bottom:8px;">"${b.bookInfo.quote}"</div>`:''}
+        ${b.bookInfo.themes?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:${b.bookInfo.similar?'7px':'0'}">${b.bookInfo.themes.map(t=>`<span style="background:rgba(184,92,110,.1);color:var(--rose);padding:2px 9px;border-radius:100px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">${t}</span>`).join('')}</div>`:''}
+        ${b.bookInfo.similar?`<div style="font-family:var(--fd);font-style:italic;font-size:.78rem;color:var(--muted);">📚 You might also love: <strong style="color:var(--ink2)">${b.bookInfo.similar.join(', ')}</strong></div>`:''}
+      </div>
+    `:'<div style="font-size:.7rem;color:var(--muted);font-family:var(--fd);font-style:italic;margin-bottom:8px;">✨ AI insights loading...</div>';
     el.innerHTML=`<div class="bk-spine" style="background:${COLS[i%COLS.length]}"></div><div class="bk-body"><span class="bk-st s-${b.status}">${lbl[b.status]}</span><div class="bk-title">${b.title}</div><div class="bk-author">by ${b.author}${b.year?' · '+b.year:''}${b.genre?' · '+b.genre:''}</div>${b.rating?`<div class="bk-stars">${starsHtml(b.rating)}</div>`:''}${infoHtml}${b.notes?`<div class="bk-notes">${b.notes}</div>`:''}<div class="bk-foot"><span>${b.date||''}</span><div style="display:flex;gap:6px;align-items:center;">${b.status!=='completed'?`<button class="done-btn" onclick="markDone('${b.id}')">✅ Done</button>`:''}<button class="dbtn" onclick="delBook('${b.id}')">✕</button></div></div></div>`;
     g.appendChild(el);
   });
