@@ -724,6 +724,7 @@ function togglePlay(){
   if(isPlaying){bgAudio.pause();isPlaying=false;document.getElementById('pbPlayBtn').textContent='▶';}
   else{bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';}).catch(()=>{});}
 }
+window.togglePlay=togglePlay;
 window.prevSong=()=>{loadSong((curSong-1+SONGS.length)%SONGS.length);if(isPlaying)bgAudio.play();};
 window.nextSong=()=>{loadSong((curSong+1)%SONGS.length);if(isPlaying)bgAudio.play();};
 bgAudio.addEventListener('ended',()=>window.nextSong());
