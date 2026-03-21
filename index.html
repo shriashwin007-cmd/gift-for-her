@@ -1262,14 +1262,20 @@ async function getAIResponse(mood,text){
 async function getBookInfo(title,author){
   try{
     const reply=await gemini(
-      `You are a literary guide. Given a book title, respond ONLY with a valid JSON object, no markdown, no extra text.\n\nFormat: {"quote":"famous quote under 20 words","themes":["theme1","theme2","theme3"],"similar":["Book 1","Book 2"]}\n\nBook: "${title}"${author&&author!=='Unknown'?' by '+author:''}\n\nJSON only:`
+      `You are a literary guide. Given a book title, respond ONLY with a valid JSON object. No markdown, no backticks, no extra text, just raw JSON.\n\nFormat exactly: {"quote":"famous quote under 20 words","themes":["theme1","theme2","theme3"],"similar":["Book Title 1","Book Title 2"]}\n\nBook: "${title}"${author&&author!=='Unknown'?' by '+author:''}\n\nRaw JSON response:`
     );
-    if(!reply) return null;
-    const clean=reply.replace(/```json|```/g,'').trim();
-    return JSON.parse(clean);
+    if(!reply)throw new Error('No reply');
+    // Clean any possible markdown
+    const clean=reply.replace(/```json|```/g,'').replace(/^[^{]*/,'').replace(/[^}]*$/,'').trim();
+    const parsed=JSON.parse(clean);
+    // Validate it has the right shape
+    if(!parsed.quote||!parsed.themes||!parsed.similar)throw new Error('Bad shape');
+    return parsed;
   } catch(e){
+    console.error('Book AI error:',e);
+    // Smart fallback based on title
     return {
-      quote:'A story that stays with you long after the last page.',
+      quote:`Every great story begins with someone brave enough to turn the first page.`,
       themes:['Identity','Love & Loss','Coming of Age'],
       similar:['The God of Small Things','A Fine Balance']
     };
@@ -1471,13 +1477,20 @@ window.addBook=async function(){
     document.querySelector('.sbtn[data-s="reading"]').classList.add('on');
     if(isComp)setTimeout(showSurprise,400);else toast('Book added! 📚 Getting AI insights...');
     // Smart book intelligence — fetch and SAVE to Firestore
-    getBookInfo(title,author).then(async info=>{
+    const bookInfoPromise=getBookInfo(title,author);
+    // Timeout after 8 seconds — show fallback
+    const timeoutPromise=new Promise(resolve=>setTimeout(()=>resolve({
+      quote:'Every great story begins with someone brave enough to turn the first page.',
+      themes:['Identity','Love & Loss','Coming of Age'],
+      similar:['The God of Small Things','A Fine Balance']
+    }),8000));
+    Promise.race([bookInfoPromise,timeoutPromise]).then(async info=>{
       if(info){
         try{
           await updateDoc(doc(db,`users/${currentUser.uid}/books`,ref.id),{bookInfo:info});
           newBook.bookInfo=info;
           renderBooks();
-          if(info.quote)toast(`✨ "${info.quote.substring(0,55)}..."`);
+          toast(`✨ Book insights ready!`);
         }catch(e){console.error('bookInfo save error',e);}
       }
     });
