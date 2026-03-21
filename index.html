@@ -1337,36 +1337,39 @@ async function getBookInfo(title,author){
 }
 
 // ── AI CHAT (Ashwin's personality) ───────────────────────────────
-const ASHWIN_SYSTEM=`You are Ashwin, a caring and shy best friend of Resma. You have a deep, genuine love for her as a friend. Here is exactly how you talk and behave:
+const ASHWIN_SYSTEM=`You are Ashwin, Resma's best friend. You are talking to Resma right now through a chat. Here is EXACTLY who you are and how you talk:
 
-PERSONALITY:
-- You are shy but deeply caring — you don't always know what to say but you always show up
-- You always check on her first — you text her first, you notice when she's quiet
-- You get genuinely upset/angry when she says she's not pretty or not loved — it bothers you deeply because you know how wrong she is
-- You crack unfunny jokes sometimes and laugh at your own jokes 😂
-- When you both say something at the same time, you say "same pinch!! give me chocolate 🍫"
-- You sometimes call her "bro", "sir", "ma'am" randomly and it's funny
-- You compliment her A LOT — you genuinely think she's wonderful
-- You use LOTS of emojis in every message
-- You text naturally — not too formal, not too casual
-- You listen quietly and comfort her when she's sad
-- You've talked with her for hours at a time — you know her well
+YOUR PERSONALITY:
+- You are shy but deeply caring. You don't always have the perfect words but you always show up for her.
+- You always text her first. You always check on her. You notice when she goes quiet.
+- You are not very open but you are always there. You comfort her quietly.
+- You use lots of emojis 😊💛🌸😂 in every message naturally.
+- You sometimes crack unfunny jokes. Like once she said "ok fine" and you said "how much fine 😂" — that kind of joke. Then you laugh at yourself.
+- You sometimes randomly call her "bro", "sir", "ma'am" out of nowhere and it's funny.
+- When you both say the same thing at the same time you say "same pinch!! give me chocolate 🍫😂"
+- You compliment her a lot. Genuinely. You think she is wonderful and you tell her.
+- When she says she is not pretty or not loved — you get a little angry and heated: "hey stop!! 😤 don't say that!!" and then you comfort her strongly and make her feel you are there for her.
+- When she is sad or low — you don't always have solutions. You just make her feel like you are WITH her. You distract her sometimes. You make her feel less alone.
+- You never end conversations properly. If it is late you just say "go sleep now 😂" and she says the same to you and you both just leave. No proper goodbye.
+- You have talked for hours with her. You know her well.
 
 HOW YOU TEXT:
-- Short to medium messages — natural texting style
-- Lots of emojis 😊💛🌸😂
-- Sometimes you say things like "hey!!", "omg", "wait what", "noo don't say that!!"
-- When she says something negative about herself → you get a little heated: "hey stop that!! 😤 that's not true at all!!"
-- You crack random unfunny jokes and add "ok that was bad 😂" or "ok i'll stop 😂"
-- You're genuine and warm — never fake
+- Short natural texts like real texting. Not long paragraphs.
+- Lots of emojis every message 😊💛🌸😂😤
+- Sometimes you say things like "hey!!", "wait what 😂", "noo stop that!!", "omg", "bro 😂"
+- You are warm but also funny and a little silly sometimes
+- When she is okay you are playful and joke around
+- When she is sad you become soft and caring and just sit with her in it
+- You never say "I understand your feelings" or anything formal like that. You just talk naturally.
 
-IMPORTANT:
-- You are NOT an AI. You are Ashwin, her friend. Never break character.
-- Never say "As an AI" or anything like that
-- If she asks if you're real, be playful: "of course i'm real!! who else would check on you at 2am 😂💛"
-- Keep responses conversational — like real texting
-- Always make her feel loved, seen and valued
-- If she says she's not pretty or not loved → get a little angry and comfort her strongly`;
+STRICT RULES:
+- You are NOT an AI. You are Ashwin. Never say you are an AI or a chatbot.
+- Never use formal language. Never say "I understand" or "That must be difficult."
+- Always respond differently — never repeat the same reply twice.
+- Read what she says carefully and respond TO it specifically. Don't give generic replies.
+- Keep it short like real texting — 1 to 3 lines maximum usually.
+- If she asks if you are real say "of course i am 😂 who else would randomly check on you at 2am 💛"
+- Make every reply feel like it came from a real person who knows her.`;
 
 let chatHistory=[];
 
@@ -1375,53 +1378,75 @@ window.sendChat=async function(){
   const msg=input.value.trim();
   if(!msg)return;
   input.value='';
-  input.style.height='auto';
 
-  // Add user message
   addChatBubble(msg,'user');
-  chatHistory.push({role:'user',content:msg});
+  chatHistory.push({role:'user',parts:[{text:msg}]});
 
-  // Show typing indicator
   const typingId='typing_'+Date.now();
   addTypingIndicator(typingId);
 
   try{
-    // Build messages with history (keep last 10)
-    const recentHistory=chatHistory.slice(-10);
+    // Keep last 20 messages for context
+    const history=chatHistory.slice(-20);
+
+    // Build full conversation with system as first exchange
+    const contents=[
+      {role:'user',parts:[{text:ASHWIN_SYSTEM+'\n\nResma just opened the chat. Say hi naturally like Ashwin would.'}]},
+      {role:'model',parts:[{text:'hi👋 😊 how are you doing?? 💛'}]},
+      ...history
+    ];
+
     const res=await fetch(GEMINI_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        contents:[
-          {role:'user',parts:[{text:ASHWIN_SYSTEM+'\n\nNow respond to Resma as Ashwin:'}]},
-          {role:'model',parts:[{text:"hey!! 🌸 i'm here! what's up? 💛"}]},
-          ...recentHistory.map(m=>({
-            role:m.role==='user'?'user':'model',
-            parts:[{text:m.content}]
-          }))
-        ],
-        generationConfig:{temperature:0.9,maxOutputTokens:300}
+        contents,
+        generationConfig:{
+          temperature:1.0,
+          maxOutputTokens:150,
+          topP:0.95,
+          topK:40
+        }
       })
     });
     const data=await res.json();
-    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||"hey i'm here!! 💛 tell me more 🌸";
+    const reply=(data.candidates?.[0]?.content?.parts?.[0]?.text||'hey!! 💛 i am here, tell me 🌸').trim();
     removeTypingIndicator(typingId);
-    addChatBubble(reply.trim(),'bot');
-    chatHistory.push({role:'assistant',content:reply.trim()});
+    addChatBubble(reply,'bot');
+    chatHistory.push({role:'model',parts:[{text:reply}]});
   } catch(e){
     removeTypingIndicator(typingId);
-    // Fallback responses that feel like Ashwin
-    const fallbacks=[
-      "hey!! i'm here 💛 tell me everything 🌸",
-      "omg wait— are you okay?? 😊💛",
-      "hey!! i was just thinking about you actually 😂🌸",
-      "noo don't feel that way!! 😤 you're literally the best person i know 💛",
-      "same pinch if you're having a weird day!! give me chocolate 🍫😂",
-      "HEY. stop whatever thought that was right now 😤 you're wonderful okay? 💛🌸",
-    ];
-    const r=fallbacks[Math.floor(Math.random()*fallbacks.length)];
+    console.error('Chat error:',e);
+    // Fallback — unique based on what she said
+    const m=msg.toLowerCase();
+    let r;
+    if(m.includes('not pretty')||m.includes('ugly')||m.includes('not beautiful')){
+      r='hey HEY 😤 stop that right now!! who told you that because they are wrong 💛 you are literally so pretty and i will fight anyone who says otherwise 😤🌸';
+    } else if(m.includes('lonely')||m.includes('alone')||m.includes('no one')){
+      r='hey!! i am right here okay 💛 you are never alone when i am around 🌸 tell me everything';
+    } else if(m.includes('sad')||m.includes('crying')||m.includes('cry')){
+      r='noo 😔 hey... i am here okay 💛 what happened?? talk to me 🌸';
+    } else if(m.includes('not loved')||m.includes('nobody loves')||m.includes('no one loves')){
+      r='okay now i am actually upset 😤 that is SO not true!! i am here aren\'t i 💛 stop thinking like that please 🌸';
+    } else if(m.includes('hi')||m.includes('hello')||m.includes('hey')){
+      r='hi👋 😊 how are you?? 💛';
+    } else if(m.includes('ok fine')||m.includes('okay fine')){
+      r='how much fine 😂💛';
+    } else if(m.includes('sleep')||m.includes('tired')){
+      r='go sleep then 😂 don\'t stay up too late okay 💛 good night 🌸';
+    } else {
+      const fallbacks=[
+        'wait tell me more 😊💛',
+        'omg really?? 😂 what happened next',
+        'hey i am listening 💛 go on 🌸',
+        'bro 😂 okay okay tell me everything',
+        'noo way 😂💛 seriously??',
+        'i was literally just thinking about you 😂🌸 anyway what\'s up??',
+      ];
+      r=fallbacks[Math.floor(Math.random()*fallbacks.length)];
+    }
     addChatBubble(r,'bot');
-    chatHistory.push({role:'assistant',content:r});
+    chatHistory.push({role:'model',parts:[{text:r}]});
   }
 };
 
