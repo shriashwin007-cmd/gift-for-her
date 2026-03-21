@@ -721,6 +721,8 @@ const SONGS=[
   {title:"The Night We Met",artist:"Lord Huron",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/Lord_Huron_-_The_Night_We_Met_Official_Audio_-_Lord_Huron_ozz7ai.mp3"},
 ];
 let curSong=0,isPlaying=false,isShuffled=false,shuffleOrder=[];
+const bgAudio=document.getElementById('bgMusic');
+bgAudio.volume=0.35;
 
 function buildShuffleOrder(){
   shuffleOrder=[...Array(SONGS.length).keys()];
@@ -785,8 +787,6 @@ window.playSong=function(i){
 };
 
 // Start music on first interaction
-const bgAudio=document.getElementById('bgMusic');
-bgAudio.volume=0.35;
 function startMusic(){
   if(isPlaying)return;
   loadSong(0);
