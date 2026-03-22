@@ -766,13 +766,13 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
 <div id="toast"></div>
 
 <!-- DRAGGABLE FLOATING CHAT BUTTON -->
-<button id="floatingChatBtn" style="
+<button id="floatingChatBtn" onclick="window.open('https://chatgpt.com/g/g-69bf873ed93481919a2eb116846e5bfe-ashwin','_blank')" style="
   position:fixed;bottom:160px;right:16px;z-index:9990;
   width:54px;height:54px;border-radius:50%;
   background:linear-gradient(135deg,var(--rose),var(--rose2));
   display:none;align-items:center;justify-content:center;
   box-shadow:0 6px 24px rgba(184,92,110,.4);
-  border:none;cursor:grab;font-size:1.4rem;
+  border:none;cursor:pointer;font-size:1.4rem;
   touch-action:none;user-select:none;
   animation:floatBtn 3s ease infinite;
 ">💬</button>
@@ -786,53 +786,37 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
 (function(){
   const btn=document.getElementById('floatingChatBtn');
   let isDragging=false,startX,startY,startLeft,startTop,moved=false;
-
-  function getPos(){
-    const r=btn.getBoundingClientRect();
-    return {left:r.left,top:r.top};
-  }
-
+  function getPos(){const r=btn.getBoundingClientRect();return{left:r.left,top:r.top};}
   function onStart(e){
     isDragging=true;moved=false;
     btn.style.cursor='grabbing';
     btn.style.animation='none';
-    btn.style.transition='none';
     const touch=e.touches?e.touches[0]:e;
     startX=touch.clientX;startY=touch.clientY;
-    const pos=getPos();
-    startLeft=pos.left;startTop=pos.top;
+    const pos=getPos();startLeft=pos.left;startTop=pos.top;
     e.preventDefault();
   }
-
   function onMove(e){
     if(!isDragging)return;
     const touch=e.touches?e.touches[0]:e;
     const dx=touch.clientX-startX;
     const dy=touch.clientY-startY;
     if(Math.abs(dx)>5||Math.abs(dy)>5)moved=true;
-    let newLeft=startLeft+dx;
-    let newTop=startTop+dy;
-    // Keep within screen
-    newLeft=Math.max(0,Math.min(window.innerWidth-54,newLeft));
-    newTop=Math.max(0,Math.min(window.innerHeight-54,newTop));
-    btn.style.left=newLeft+'px';
-    btn.style.top=newTop+'px';
-    btn.style.right='auto';
-    btn.style.bottom='auto';
+    let newLeft=Math.max(0,Math.min(window.innerWidth-54,startLeft+dx));
+    let newTop=Math.max(0,Math.min(window.innerHeight-54,startTop+dy));
+    btn.style.left=newLeft+'px';btn.style.top=newTop+'px';
+    btn.style.right='auto';btn.style.bottom='auto';
     e.preventDefault();
   }
-
-  function onEnd(e){
+  function onEnd(){
     if(!isDragging)return;
     isDragging=false;
-    btn.style.cursor='grab';
+    btn.style.cursor='pointer';
     btn.style.animation='floatBtn 3s ease infinite';
     if(!moved){
-      // It was a tap not a drag — open chat
-      window.location.href='/gift-for-her/chat.html';
+      window.open('https://chatgpt.com/g/g-69bf873ed93481919a2eb116846e5bfe-ashwin','_blank');
     }
   }
-
   btn.addEventListener('mousedown',onStart);
   btn.addEventListener('touchstart',onStart,{passive:false});
   window.addEventListener('mousemove',onMove);
@@ -1738,7 +1722,7 @@ function showApp(user){
   document.getElementById('appHeader').style.display='block';
   document.getElementById('appMain').style.display='block';
   document.getElementById('appBnav').style.display='flex';
-  document.getElementById("floatingChatBtn").style.display="flex";
+      document.getElementById('floatingChatBtn').style.display='flex';
 
   // Countdown
   const now=new Date(),bday=new Date(2026,2,28),diff=bday-now,cb=document.getElementById('cdbanner');
