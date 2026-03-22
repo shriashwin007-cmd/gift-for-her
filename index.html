@@ -963,10 +963,18 @@ window.toggleRepeat=function(){
 bgAudio.addEventListener('ended',()=>{
   if(isRepeat){
     bgAudio.currentTime=0;
-    bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});
+    bgAudio.play().then(()=>{
+      isPlaying=true;
+      document.getElementById('pbPlayBtn').textContent='⏸';
+    }).catch(()=>{});
   } else {
-    loadSong(getNextSong());
-    bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});
+    const next=getNextSong();
+    loadSong(next);
+    bgAudio.play().then(()=>{
+      isPlaying=true;
+      document.getElementById('pbPlayBtn').textContent='⏸';
+      renderPlaylist();
+    }).catch(()=>{});
   }
 });
 
