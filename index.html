@@ -1836,7 +1836,6 @@ window.enterApp=function(){
   es.style.opacity='0';
   es.style.transition='opacity .6s';
   setTimeout(()=>es.style.display='none',600);
-  // Start music NOW — this is user interaction so browser allows it
   loadSong(9);
   bgAudio.play().then(()=>{
     isPlaying=true;
@@ -1845,10 +1844,11 @@ window.enterApp=function(){
     renderPlaylist();
   }).catch(()=>{});
 };
+
+window.closeWelcome=function(){
   const w=document.getElementById('welcome');
   w.classList.add('out');
   setTimeout(()=>{w.style.display='none';},900);
-  // Show love overlay after welcome closes
   setTimeout(showLoveOverlay,1000);
 };
 
