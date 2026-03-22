@@ -435,6 +435,23 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
   <div class="loading-text">Opening your world, Resma...</div>
 </div>
 
+<!-- ENTER SCREEN -->
+<div id="enterScreen" style="display:none;position:fixed;inset:0;z-index:99996;background:rgba(20,5,2,.92);backdrop-filter:blur(16px);flex-direction:column;align-items:center;justify-content:center;padding:32px;cursor:pointer;" onclick="enterApp()">
+  <div style="text-align:center;animation:fadeInUp .8s ease;">
+    <div style="font-size:2.8rem;margin-bottom:20px;">🌸</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;font-style:italic;color:#fff;margin-bottom:12px;">Welcome, Resma</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,.7);margin-bottom:40px;line-height:1.8;">Your world is ready. 💛</div>
+    <div style="background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;padding:14px 40px;border-radius:100px;font-family:'Josefin Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 8px 24px rgba(184,92,110,.4);animation:pulse 2s ease infinite;">
+      Tap to Enter 🎵
+    </div>
+    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.8rem;color:rgba(255,255,255,.4);margin-top:16px;">music will begin ✨</div>
+  </div>
+</div>
+<style>
+@keyframes fadeInUp{from{transform:translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(184,92,110,.4),0 0 0 0 rgba(184,92,110,.3);}50%{box-shadow:0 8px 24px rgba(184,92,110,.5),0 0 0 12px rgba(184,92,110,0);}}
+</style>
+
 <!-- BIRTHDAY MIDNIGHT MODAL -->
 <div id="bdayModal">
   <div class="bday-box">
@@ -1735,7 +1752,13 @@ onAuthStateChanged(auth,async(user)=>{
     document.getElementById('loadingScreen').style.display='flex';
     await Promise.all([loadBooks(),loadPapers(),loadQuotes(),loadDiary()]);
     document.getElementById('loadingScreen').classList.add('hide');
-    setTimeout(()=>{document.getElementById('loadingScreen').style.display='none';showApp(user);},500);
+    setTimeout(()=>{
+      document.getElementById('loadingScreen').style.display='none';
+      // Show enter screen first
+      document.getElementById('enterScreen').style.display='flex';
+      // Pre-load app in background
+      showApp(user);
+    },500);
   } else {
     document.getElementById('loginScreen').style.display='flex';
     document.getElementById('loadingScreen').style.display='none';
@@ -1805,17 +1828,23 @@ function showApp(user){
     setTimeout(showLoveOverlay,1200);
   }
 
-  // Start music immediately after login
+  // Music starts when she taps Enter screen
+}
+
+window.enterApp=function(){
+  const es=document.getElementById('enterScreen');
+  es.style.opacity='0';
+  es.style.transition='opacity .6s';
+  setTimeout(()=>es.style.display='none',600);
+  // Start music NOW — this is user interaction so browser allows it
   loadSong(9);
   bgAudio.play().then(()=>{
     isPlaying=true;
     document.getElementById('pbPlayBtn').textContent='⏸';
     document.getElementById('playerBar').style.display='flex';
     renderPlaylist();
-  }).catch(()=>startMusic()); // fallback if browser blocks
-}
-
-window.closeWelcome=function(){
+  }).catch(()=>{});
+};
   const w=document.getElementById('welcome');
   w.classList.add('out');
   setTimeout(()=>{w.style.display='none';},900);
