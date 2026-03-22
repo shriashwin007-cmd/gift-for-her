@@ -391,7 +391,7 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
 <div id="particles"></div>
 
 <!-- AUDIO -->
-<audio id="bgMusic" loop preload="auto" crossorigin="anonymous"></audio>
+<audio id="bgMusic" preload="auto" crossorigin="anonymous"></audio>
 
 <!-- LOVE OVERLAY (shows every open) -->
 <div id="loveOverlay">
@@ -963,18 +963,21 @@ window.toggleRepeat=function(){
 bgAudio.addEventListener('ended',()=>{
   if(isRepeat){
     bgAudio.currentTime=0;
-    bgAudio.play().then(()=>{
-      isPlaying=true;
-      document.getElementById('pbPlayBtn').textContent='⏸';
-    }).catch(()=>{});
+    bgAudio.play().catch(()=>{});
   } else {
     const next=getNextSong();
     loadSong(next);
-    bgAudio.play().then(()=>{
-      isPlaying=true;
-      document.getElementById('pbPlayBtn').textContent='⏸';
-      renderPlaylist();
-    }).catch(()=>{});
+    // Small delay to let browser load the new src
+    setTimeout(()=>{
+      bgAudio.play().then(()=>{
+        isPlaying=true;
+        document.getElementById('pbPlayBtn').textContent='⏸';
+        renderPlaylist();
+      }).catch(()=>{
+        isPlaying=false;
+        document.getElementById('pbPlayBtn').textContent='▶';
+      });
+    },300);
   }
 });
 
