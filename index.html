@@ -982,7 +982,21 @@ function startMusic(){
     document.getElementById('pbPlayBtn').textContent='⏸';
     document.getElementById('playerBar').style.display='flex';
     renderPlaylist();
-  }).catch(()=>{});
+  }).catch(()=>{
+    // Browser blocked autoplay — wait for first tap
+    const unlock=()=>{
+      bgAudio.play().then(()=>{
+        isPlaying=true;
+        document.getElementById('pbPlayBtn').textContent='⏸';
+        document.getElementById('playerBar').style.display='flex';
+        renderPlaylist();
+      }).catch(()=>{});
+      document.removeEventListener('click',unlock);
+      document.removeEventListener('touchstart',unlock);
+    };
+    document.addEventListener('click',unlock,{once:true,passive:true});
+    document.addEventListener('touchstart',unlock,{once:true,passive:true});
+  });
 }
 ['click','touchstart'].forEach(ev=>{
   document.addEventListener(ev,function h(){startMusic();document.removeEventListener(ev,h);},{once:true,passive:true});
@@ -1791,8 +1805,14 @@ function showApp(user){
     setTimeout(showLoveOverlay,1200);
   }
 
-  // Start music
-  startMusic();
+  // Start music immediately after login
+  loadSong(9);
+  bgAudio.play().then(()=>{
+    isPlaying=true;
+    document.getElementById('pbPlayBtn').textContent='⏸';
+    document.getElementById('playerBar').style.display='flex';
+    renderPlaylist();
+  }).catch(()=>startMusic()); // fallback if browser blocks
 }
 
 window.closeWelcome=function(){
