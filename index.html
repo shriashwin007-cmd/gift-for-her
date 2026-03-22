@@ -746,6 +746,7 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
     <button class="pb-btn" onclick="prevSong()">⏮</button>
     <button class="pb-btn main" id="pbPlayBtn" onclick="togglePlay()">▶</button>
     <button class="pb-btn" onclick="nextSong()">⏭</button>
+    <button class="pb-btn" id="pbRepeatBtn" onclick="toggleRepeat()" title="Repeat">↻</button>
   </div>
 </div>
 
@@ -891,7 +892,7 @@ const SONGS=[
   {title:"I Think They Call This Love",artist:"Matthew Ifield",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/I_Think_They_Call_This_Love_Cover_-_Matthew_Ifield_nh3xhb.mp3"},
   {title:"The Night We Met",artist:"Lord Huron",url:"https://res.cloudinary.com/dxvui0xkz/video/upload/v1774103732/Lord_Huron_-_The_Night_We_Met_Official_Audio_-_Lord_Huron_ozz7ai.mp3"},
 ];
-let curSong=0,isPlaying=false,isShuffled=false,shuffleOrder=[];
+let curSong=0,isPlaying=false,isShuffled=false,isRepeat=false,shuffleOrder=[];
 const bgAudio=document.getElementById('bgMusic');
 bgAudio.volume=0.35;
 
@@ -935,7 +936,22 @@ window.toggleShuffle=function(){
   if(btn){btn.style.background=isShuffled?'var(--rose)':'none';btn.style.color=isShuffled?'#fff':'var(--ink2)';}
   renderPlaylist();
 };
-bgAudio.addEventListener('ended',()=>{loadSong(getNextSong());bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});});
+window.toggleRepeat=function(){
+  isRepeat=!isRepeat;
+  const btn=document.getElementById('pbRepeatBtn');
+  btn.style.color=isRepeat?'var(--rose)':'';
+  btn.style.fontWeight=isRepeat?'700':'';
+};
+
+bgAudio.addEventListener('ended',()=>{
+  if(isRepeat){
+    bgAudio.currentTime=0;
+    bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});
+  } else {
+    loadSong(getNextSong());
+    bgAudio.play().then(()=>{isPlaying=true;document.getElementById('pbPlayBtn').textContent='⏸';});
+  }
+});
 
 function renderPlaylist(){
   const pl=document.getElementById('playlist');
