@@ -960,7 +960,7 @@ window.playSong=function(i){
 // Start music on first interaction
 function startMusic(){
   if(isPlaying)return;
-  loadSong(0);
+  loadSong(9);
   bgAudio.play().then(()=>{
     isPlaying=true;
     document.getElementById('pbPlayBtn').textContent='⏸';
