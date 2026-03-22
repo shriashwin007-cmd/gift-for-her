@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
 <title>For Resma 🌸 — 28th March</title>
 <link rel="manifest" href="/gift-for-her/manifest.json"/>
 <meta name="theme-color" content="#b85c6e"/>
@@ -383,7 +383,118 @@ main{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(20
 .bnav-btn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;font-size:.55rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);transition:color .2s;}
 .bnav-btn span:first-child{font-size:1.15rem;}
 .bnav-btn.on{color:var(--rose);}
-</style>
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media(max-width:700px){
+
+  /* Typography */
+  body{font-size:15px;-webkit-text-size-adjust:100%;}
+
+  /* Header */
+  #appHeader{padding:10px 14px 0;}
+  .user-info{gap:8px;}
+  .user-name{font-size:.78rem;}
+  .signout-btn{padding:5px 10px;font-size:.65rem;}
+
+  /* Main content */
+  #appMain{padding:10px 12px 0;}
+
+  /* Panels */
+  .panel{padding:0;}
+
+  /* Letter */
+  .letter-wrap{padding:0;}
+  .letter-paper{padding:clamp(20px,5vw,36px) clamp(16px,4vw,28px);}
+  .letter-body{font-size:clamp(1rem,3.5vw,1.1rem);line-height:1.9;}
+
+  /* Forms */
+  .form-box{padding:16px;}
+  .fg2{grid-template-columns:1fr;}
+  input,textarea,select{font-size:16px!important;} /* Prevents zoom on iOS */
+
+  /* Books grid */
+  .bk-grid{grid-template-columns:1fr;}
+  .bk{padding:14px;}
+  .bk-title{font-size:1rem;}
+
+  /* Stats */
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .stat{padding:10px;}
+  .stat-n{font-size:1.6rem;}
+
+  /* Quotes masonry */
+  .quotes-grid{columns:1;}
+
+  /* Diary */
+  .diary-entry{padding:14px;}
+
+  /* AI response box */
+  #aiResponseBox{margin-bottom:14px;}
+
+  /* Player bar */
+  #playerBar{padding:8px 12px;bottom:56px;}
+  .pb-title{font-size:.82rem;}
+  .pb-artist{font-size:.7rem;}
+  .pb-btns{gap:4px;}
+  .pb-btn{font-size:1.1rem;padding:3px;}
+  .pb-btn.main{width:32px;height:32px;font-size:.9rem;}
+
+  /* Toast */
+  #toast{font-size:.82rem;padding:9px 18px;max-width:85vw;white-space:normal;text-align:center;}
+
+  /* Floating chat button */
+  #floatingChatBtn{bottom:100px!important;width:48px;height:48px;font-size:1.2rem;}
+
+  /* Vault */
+  #tab-vault .vault-letter{padding:24px 18px;}
+
+  /* Love overlay */
+  .love-card{padding:24px 20px;}
+  .love-title{font-size:1.5rem;}
+  .love-msg{font-size:.95rem;}
+
+  /* Birthday modal */
+  .bday-box{padding:28px 20px;}
+  .bday-title{font-size:1.8rem;}
+  .bday-name{font-size:2.2rem;}
+
+  /* Welcome modal */
+  .w-wrap{padding:24px 20px;}
+  .w-name{font-size:2rem;}
+
+  /* Countdown banner */
+  #cdbanner{font-size:.82rem;padding:9px 14px;}
+
+  /* Daily quote */
+  #dailyQuoteBanner{padding:10px 14px;font-size:.82rem;}
+
+  /* Section headers */
+  .sec-hdr h2{font-size:1.6rem;}
+
+  /* Buttons */
+  .btn-add{padding:13px;font-size:.82rem;}
+  .mood-btns{gap:6px;}
+  .mood-btn{padding:7px 10px;font-size:.8rem;}
+
+  /* Playlist */
+  .pl-item{padding:10px 12px;}
+  .pl-title{font-size:.88rem;}
+  .pl-artist{font-size:.72rem;}
+
+  /* Mystery popup */
+  #mysteryPopup{max-width:240px;top:70px;}
+
+  /* You are loved popup */
+  #youAreLovedPopup{max-width:280px;}
+
+  /* Research papers */
+  .pp{padding:14px;}
+  .pp-title{font-size:.92rem;}
+
+  /* Scrollbar hide on mobile */
+  ::-webkit-scrollbar{display:none;}
+  *{-ms-overflow-style:none;scrollbar-width:none;}
+}
 </head>
 <body>
 
